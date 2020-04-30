@@ -28,12 +28,12 @@
 namespace fst {
 
 
-template<class Weight, class IntType> class CompactLatticePusher {  
+template<class Weight, class IntType> class CompactLatticePusher {
  public:
   typedef CompactLatticeWeightTpl<Weight, IntType> CompactWeight;
   typedef ArcTpl<CompactWeight> CompactArc;
   typedef typename CompactArc::StateId StateId;
-  
+
   CompactLatticePusher(MutableFst<CompactArc> *clat): clat_(clat) { }
   bool Push() {
     if (clat_->Properties(kTopSorted, true) == 0) {
@@ -89,12 +89,13 @@ template<class Weight, class IntType> class CompactLatticePusher {
   void CheckForConflict(const CompactWeight &final,
                         StateId state,
                         int32 *shift) {
+    if (shift == NULL) return;
     // At input, "shift" has the maximum value that we could shift back assuming
     // there is no conflict between the values of the strings.  We need to check
     // if there is conflict, and if so, reduce the "shift".
     bool is_final = (final != CompactWeight::Zero());
     size_t num_arcs = clat_->NumArcs(state);
-    if (num_arcs + (is_final ? 1 : 0) > 1 && shift > 0) {
+    if (num_arcs + (is_final ? 1 : 0) > 1 && *shift > 0) {
       // There is potential for conflict between string values, because >1
       // [arc or final-prob].  Find the longest shift up to and including the
       // current shift, that gives no conflict.
@@ -131,7 +132,7 @@ template<class Weight, class IntType> class CompactLatticePusher {
   void ComputeShifts() {
     StateId num_states = clat_->NumStates();
     shift_vec_.resize(num_states, 0);
-    
+
     // The for loop will only work if StateId is signed, so assert this.
     KALDI_COMPILE_TIME_ASSERT(static_cast<StateId>(-1) < static_cast<StateId>(0));
     // We rely on the topological sorting, so clat_->Start() should be zero or
@@ -186,7 +187,7 @@ template<class Weight, class IntType> class CompactLatticePusher {
                                                 string.end()));
         aiter.SetValue(arc);
       }
-      
+
       CompactWeight final = clat_->Final(state);
       if (final != CompactWeight::Zero()) {
         // Erase first "shift" elements of final-prob.
@@ -274,7 +275,7 @@ bool PushCompactLatticeWeights(
       clat->SetFinal(s, final_weight);
     }
   }
-  
+
   return true;
 }
 
